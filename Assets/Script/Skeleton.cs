@@ -36,11 +36,30 @@ public class Skeleton : MonoBehaviour
         }
     }
 
+    void OnGUI()
+    {
+        Vector3 point = new Vector3();
+        Event currentEvent = Event.current;
+        Vector2 mousePos = new Vector2();
+
+        Camera cam = Camera.main;
+
+
+        mousePos.x = currentEvent.mousePosition.x;
+        mousePos.y = cam.pixelHeight - currentEvent.mousePosition.y;
+
+        point = cam.ScreenToWorldPoint(new Vector3(mousePos.x, mousePos.y, cam.nearClipPlane));
+        target = new Vector2(point.x,point.y);
+    }
+
     void Fabrik()
     {
-        Vector2 target = new Vector2(t.transform.position.x, t.transform.position.y);
-        Debug.Log("y="+t.transform.position.x);
-        Debug.Log("x="+t.transform.position.y);
+        // Vector2 target = new Vector2(t.transform.position.x, t.transform.position.y);
+        Vector2 target = this.target;
+        Debug.Log("thistarget =" + this.target);
+        Debug.Log("target =" + target);
+
+        //Vector2 target = new Vector2(this.target.x, this.target.y);
 
         int n = list_jointPoint.Count;
         
@@ -63,7 +82,7 @@ public class Skeleton : MonoBehaviour
         if(dist > sumDistance )
         {
             //the target is unreachable
-            for(int i=0; i < n -1; i++)
+            for(int i=0; i < n - 1; i++)
             {
                 //Find the distance ri  between the target t and the joint
                 float r = Vector2.Distance(target, list_jointPoint[i]);
@@ -89,12 +108,8 @@ public class Skeleton : MonoBehaviour
 
                 for(int i = n-2; i >= 0; i--)
                 {
-                    //Find the distance ri between the new joint position pi+1 abd the joint pi
-                    float r = Vector2.Distance(list_jointPoint[i + 1], list_jointPoint[i]);
-                    float lambda = distance[i] / r;
-
                     //Find the new joint position pi
-                    list_jointPoint[i] = (1 - lambda) * list_jointPoint[i + 1] + lambda * list_jointPoint[i];
+                    list_jointPoint[i] = Reach(i+1,i,distance[i]);
                 }
 
                 //STAGE2 backward reaching
@@ -102,18 +117,22 @@ public class Skeleton : MonoBehaviour
 
                 list_jointPoint[0] = b;
 
-                for(int i=1; i < n-1; i++)
+                for(int i=0; i < n-1; i++)
                 {
-                    //Find the distance ri betweend the new joint position pi and the joint pi+1
-                    float r = Vector2.Distance(list_jointPoint[i + 1], list_jointPoint[i]);
-                    float lambda = distance[i] / r;
-
                     //Find the new positions pi
-                    list_jointPoint[i + 1] = (1 - lambda) * list_jointPoint[i] + lambda * list_jointPoint[i + 1];
+                    list_jointPoint[i+1] = Reach(i, i+1, distance[i]);
                 }
                 difA = Vector2.Distance(list_jointPoint[n-1],target);
             } 
         }
+    }
+
+    Vector2 Reach(int a,int b,float d)
+    {
+        float r = Vector2.Distance(list_jointPoint[a], list_jointPoint[b]);
+        float lambda = d / r;
+
+        return (1 - lambda) * list_jointPoint[a] + lambda * list_jointPoint[b];
     }
 
 
